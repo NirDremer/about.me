@@ -40,7 +40,6 @@
 h1 {
   font-size: var(--x5l-size);
   color: #adb8b5;
-  padding-left: var(--md-size);
   margin-bottom: 0; }
 
 h1, h2, h3, h4, h5, h6 {
@@ -99,6 +98,10 @@ a {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale; }
 
+/*.icon-mail {
+  margin-left: 0;
+}*/
+
 .headshot {
   height: 100px;
 }
@@ -135,6 +138,7 @@ body {
       z-index: 1;
       opacity: 0.3; }
     body .right .head {
+      text-align: center;
       margin: var(--xxl-size) 0;
       position: absolute;
       top: 0;
@@ -155,15 +159,13 @@ body {
         text-transform: uppercase;
         letter-spacing: 1px;
         margin: 0;
-        font-size: var(--md-size);
         font-weight: bold;
-        padding-left: var(--md-size);
         color: #f2f2f2; }
       body .right .head .contact-info {
         display: inline-flex;
         flex-direction: column;
         /* margin: var(--xxxl-size) auto var(--xl-size) auto; */
-        padding-left: var(--xxs-size);
+        padding-left: 0 - var(--xxs-size);
         margin-top: var(--sm-size);
         margin-bottom: var(--sm-size);
         font-size: var(--sm-size);
@@ -199,6 +201,7 @@ body {
       body .right .scrim {
         display: none; }
       body .right .head {
+        /* padding-left: var(--md-size); */
         position: static;
         height: auto; }
         body .right .head p {
