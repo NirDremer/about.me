@@ -116,7 +116,7 @@ body {
   body .left {
     width: 100%;
     height: 100vh;
-    box-shadow: 5px 0 5px -5px #cccccc;
+    /* box-shadow: 5px 0 5px -5px #cccccc; */
     background-image: url("assets/background6.jpg");
     background-size: cover;
     background-position: center;
@@ -251,7 +251,7 @@ body {
         color: #909e9a; }
       body .right .section .cards .card {
         border: solid 1px #eeeeee;
-        transition: box-shadow .1s ease-in-out;
+        /* transition: box-shadow .1s ease-in-out; */
         background-color: #ffffff;
         margin-bottom: var(--lg-size);
         display: flex;
@@ -333,7 +333,7 @@ body {
         body .right .chips .chip::before {
           background: #fafafa;
           border-radius: .625rem;
-          box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
+          /* box-shadow: inset 0 1px rgba(0, 0, 0, 0.25); */
           content: '';
           height: .375rem;
           left: .5rem;
