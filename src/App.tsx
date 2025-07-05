@@ -10,8 +10,8 @@ function App() {
 
   // Get the base path for assets
   const getBasePath = (): string => {
-    // Always use the base path for GitHub Pages
-    return '/about.me';
+    // No base path needed when using custom domain
+    return '';
   };
 
   useEffect(() => {
