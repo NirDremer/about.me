@@ -10,12 +10,8 @@ function App() {
 
   // Get the base path for assets
   const getBasePath = (): string => {
-    // In production (GitHub Pages), use the repository name as base path
-    if (import.meta.env.PROD) {
-      return '/about.me';
-    }
-    // In development, no base path needed
-    return '';
+    // Always use the base path for GitHub Pages
+    return '/about.me';
   };
 
   useEffect(() => {
