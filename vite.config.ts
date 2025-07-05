@@ -4,12 +4,17 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/about.me/',
+  base: process.env.NODE_ENV === 'production' ? '/about.me/' : '/',
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
 });
