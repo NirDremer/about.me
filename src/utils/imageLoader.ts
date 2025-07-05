@@ -11,6 +11,16 @@ export interface Photo {
   fileDate: Date;
 }
 
+// Get the base path for assets
+const getBasePath = (): string => {
+  // In production (GitHub Pages), use the repository name as base path
+  if (import.meta.env.PROD) {
+    return '/about.me';
+  }
+  // In development, no base path needed
+  return '';
+};
+
 // Common image file extensions
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff'];
 
@@ -22,31 +32,59 @@ const isImageFile = (filename: string): boolean => {
 
 // Parse timestamp from filename (YYYYMMDD-HH-MM-SS format)
 const parseTimestampFromFilename = (filename: string): Date | null => {
-  // Match YYYYMMDD-HH-MM-SS pattern at the start of filename
-  const timestampMatch = filename.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})-(\d{2})-(\d{2})/);
+  // Try multiple timestamp patterns
   
-  if (!timestampMatch) {
-    return null;
+  // Pattern 1: YYYYMMDD-HH-MM-SS (original format)
+  let timestampMatch = filename.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})-(\d{2})-(\d{2})/);
+  
+  if (timestampMatch) {
+    const [, year, month, day, hour, minute, second] = timestampMatch;
+    const date = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      parseInt(hour),
+      parseInt(minute),
+      parseInt(second)
+    );
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Pattern 2: YYYYMMDD-XXXXXXX (like 20250615-A7C00863.jpg)
+  timestampMatch = filename.match(/^(\d{4})(\d{2})(\d{2})-/);
+  
+  if (timestampMatch) {
+    const [, year, month, day] = timestampMatch;
+    const date = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      12, 0, 0 // Default to noon
+    );
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Pattern 3: DD-MM-YY_HHMMSS (like 07-09-23_121056)
+  timestampMatch = filename.match(/^(\d{2})-(\d{2})-(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  
+  if (timestampMatch) {
+    const [, day, month, year, hour, minute, second] = timestampMatch;
+    // Assume 20xx for 2-digit years
+    const fullYear = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
+    const date = new Date(
+      fullYear,
+      parseInt(month) - 1,
+      parseInt(day),
+      parseInt(hour),
+      parseInt(minute),
+      parseInt(second)
+    );
+    if (!isNaN(date.getTime())) return date;
   }
 
-  const [, year, month, day, hour, minute, second] = timestampMatch;
-  
-  // Create date object (month is 0-indexed in JavaScript)
-  const date = new Date(
-    parseInt(year),
-    parseInt(month) - 1,
-    parseInt(day),
-    parseInt(hour),
-    parseInt(minute),
-    parseInt(second)
-  );
-
-  // Validate the date
-  if (isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date;
+  // If no timestamp pattern matches, return current date as fallback
+  console.warn(`Could not parse timestamp from filename: ${filename}, using current date`);
+  return new Date();
 };
 
 // Extract location/description from filename after timestamp
@@ -54,10 +92,20 @@ const extractLocationFromFilename = (filename: string): string => {
   // Remove file extension
   const nameWithoutExt = filename.replace(/\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i, '');
   
-  // Remove timestamp prefix (YYYYMMDD-HH-MM-SS)
-  const withoutTimestamp = nameWithoutExt.replace(/^\d{8}-\d{2}-\d{2}-\d{2}-?/, '');
+  // Remove various timestamp prefixes
+  let withoutTimestamp = nameWithoutExt
+    .replace(/^\d{8}-\d{2}-\d{2}-\d{2}-?/, '') // YYYYMMDD-HH-MM-SS
+    .replace(/^\d{8}-[A-Z0-9]+/, '') // YYYYMMDD-XXXXXXX
+    .replace(/^\d{2}-\d{2}-\d{2}_\d{6}_-_/, ''); // DD-MM-YY_HHMMSS_-_
   
   if (!withoutTimestamp) {
+    // If no description after timestamp, try to extract meaningful parts
+    if (nameWithoutExt.includes('Croatia') || nameWithoutExt.includes('Slovenia')) {
+      return 'Croatia Slovenia Vacation';
+    }
+    if (nameWithoutExt.includes('A7C')) {
+      return 'Photography';
+    }
     return 'Photo';
   }
 
@@ -97,17 +145,18 @@ const formatTime = (date: Date): string => {
 // Load photo manifest with better error handling
 const loadPhotoManifest = async (): Promise<{ photos: string[], success: boolean }> => {
   try {
-    console.log('Loading photo manifest...');
-    const response = await fetch('/photos/manifest.json');
+    console.log('Loading photo manifest from:', `${getBasePath()}/photos/manifest.json`);
+    const basePath = getBasePath();
+    const response = await fetch(`${basePath}/photos/manifest.json`);
     if (!response.ok) {
-      console.warn('Failed to load manifest:', response.status, response.statusText);
+      console.warn('Failed to load manifest:', response.status, response.statusText, 'URL:', `${basePath}/photos/manifest.json`);
       return { photos: [], success: false };
     }
     const manifest = await response.json();
-    console.log('Loaded manifest:', manifest);
+    console.log('Loaded manifest successfully:', manifest);
     return { photos: manifest.photos || [], success: true };
   } catch (error) {
-    console.error('Error loading photo manifest:', error);
+    console.error('Error loading photo manifest from:', `${getBasePath()}/photos/manifest.json`, error);
     return { photos: [], success: false };
   }
 };
@@ -150,14 +199,10 @@ export const loadPhotosFromRepo = async (): Promise<Photo[]> => {
       // Parse timestamp from filename
       const fileDate = parseTimestampFromFilename(filename);
       
-      if (!fileDate) {
-        console.warn(`Could not parse timestamp from filename: ${filename}, skipping`);
-        continue;
-      }
-
       const location = extractLocationFromFilename(filename);
       const title = generateTitleFromFilename(filename);
-      const imagePath = '/photos/' + filename;
+      const basePath = getBasePath();
+      const imagePath = `${basePath}/photos/${filename}`;
       
       console.log(`Processing photo: ${filename} -> ${imagePath}`);
       
@@ -171,7 +216,7 @@ export const loadPhotosFromRepo = async (): Promise<Photo[]> => {
         description: `Captured on ${formatDate(fileDate)} at ${formatTime(fileDate)}`,
         overlayText: location,
         fileName: filename,
-        fileDate
+        fileDate: fileDate || new Date()
       });
     }
 

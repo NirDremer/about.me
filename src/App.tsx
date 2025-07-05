@@ -8,6 +8,16 @@ function App() {
   const [heroImage, setHeroImage] = useState<string>('');
   const [hasPhotos, setHasPhotos] = useState<boolean>(false);
 
+  // Get the base path for assets
+  const getBasePath = (): string => {
+    // In production (GitHub Pages), use the repository name as base path
+    if (import.meta.env.PROD) {
+      return '/about.me';
+    }
+    // In development, no base path needed
+    return '';
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
@@ -24,13 +34,15 @@ function App() {
           setHasPhotos(true);
         } else {
           // Use default background when no photos found in manifest
-          setHeroImage('/bg.jpg');
+          const basePath = getBasePath();
+          setHeroImage(`${basePath}/bg.jpg`);
           setHasPhotos(false);
         }
       } catch (error) {
         console.error('Error loading hero image:', error);
         // Fallback to default background on error
-        setHeroImage('/bg.jpg');
+        const basePath = getBasePath();
+        setHeroImage(`${basePath}/bg.jpg`);
         setHasPhotos(false);
       }
     };
