@@ -216,10 +216,10 @@ export const loadPhotosFromRepo = async (): Promise<Photo[]> => {
       });
     }
 
-    // Sort by timestamp (newest first)
-    const sortedPhotos = photos.sort((a, b) => b.fileDate.getTime() - a.fileDate.getTime());
-    console.log('Final sorted photos:', sortedPhotos.map(p => ({ id: p.id, src: p.src })));
-    return sortedPhotos;
+    // Shuffle photos randomly
+    const shuffledPhotos = photos.sort(() => Math.random() - 0.5);
+    console.log('Final shuffled photos:', shuffledPhotos.map(p => ({ id: p.id, src: p.src })));
+    return shuffledPhotos;
 
   } catch (error) {
     console.error('Error loading photos from manifest:', error);
